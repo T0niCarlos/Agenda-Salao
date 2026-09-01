@@ -97,9 +97,9 @@ export function BookingWizard({
       {/* Passo 1: serviço */}
       <Card>
         <CardHeader>
-          <CardTitle>1. Escolha o serviço</CardTitle>
+          <CardTitle className="text-xl text-pink-600">1. Escolha o serviço</CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col gap-2">
+        <CardContent className="flex flex-col gap-3">
           {services.length === 0 && (
             <p className="text-sm text-muted-foreground">
               Nenhum serviço disponível no momento.
@@ -110,12 +110,12 @@ export function BookingWizard({
               key={service.id}
               type="button"
               onClick={() => handleSelectService(service)}
-              className={`flex items-center justify-between rounded-md border p-3 text-left text-sm hover:bg-accent ${
-                serviceId === service.id ? "border-primary" : "border-input"
+              className={`flex items-center justify-between rounded-xl border p-4 text-left text-sm transition-all hover:border-pink-300 hover:bg-pink-50/50 ${
+                serviceId === service.id ? "border-pink-500 bg-pink-50 ring-1 ring-pink-500" : "border-input bg-white"
               }`}
             >
-              <span>{service.name}</span>
-              <span className="text-muted-foreground">
+              <span className="font-medium text-slate-700">{service.name}</span>
+              <span className="text-pink-600 font-semibold bg-white px-2 py-1 rounded-md shadow-sm border border-pink-100">
                 {service.duration_minutes}min · {formatPrice(service.price_cents)}
               </span>
             </button>
@@ -125,14 +125,14 @@ export function BookingWizard({
 
       {/* Passo 2: profissional */}
       {serviceId && (
-        <Card>
+        <Card className="border-pink-100 shadow-sm">
           <CardHeader>
-            <CardTitle>2. Escolha a profissional</CardTitle>
+            <CardTitle className="text-xl text-pink-600">2. Escolha a profissional</CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col gap-2">
+          <CardContent className="flex flex-col gap-3">
             {professionals.length === 0 && (
               <p className="text-sm text-muted-foreground">
-                Nenhum profissional disponível para este serviço.
+                Nenhuma profissional disponível para este serviço.
               </p>
             )}
             {professionals.map((professional) => (
@@ -143,8 +143,8 @@ export function BookingWizard({
                   setProfessionalId(professional.id);
                   loadSlots(professional.id, dateStr);
                 }}
-                className={`rounded-md border p-3 text-left text-sm hover:bg-accent ${
-                  professionalId === professional.id ? "border-primary" : "border-input"
+                className={`rounded-xl border p-4 text-left text-sm font-medium transition-all hover:border-pink-300 hover:bg-pink-50/50 ${
+                  professionalId === professional.id ? "border-pink-500 bg-pink-50 ring-1 ring-pink-500 text-pink-700" : "border-input text-slate-700 bg-white"
                 }`}
               >
                 {professional.name}
@@ -156,13 +156,13 @@ export function BookingWizard({
 
       {/* Passo 3: data + horário */}
       {professionalId && (
-        <Card>
+        <Card className="border-pink-100 shadow-sm">
           <CardHeader>
-            <CardTitle>3. Escolha data e horário</CardTitle>
+            <CardTitle className="text-xl text-pink-600">3. Escolha data e horário</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="date">Data</Label>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="date" className="text-slate-600 font-medium">Data</Label>
               <Input
                 id="date"
                 type="date"
@@ -172,11 +172,11 @@ export function BookingWizard({
                   setDateStr(e.target.value);
                   loadSlots(professionalId, e.target.value);
                 }}
-                className="w-48"
+                className="w-48 focus-visible:ring-pink-400 border-pink-200"
               />
             </div>
 
-            {isPending && <p className="text-sm text-muted-foreground">Carregando horários...</p>}
+            {isPending && <p className="text-sm text-pink-500 animate-pulse">Carregando horários disponíveis...</p>}
             {slotsError && <p className="text-sm text-destructive">{slotsError}</p>}
             {!isPending && !slotsError && slots.length === 0 && (
               <p className="text-sm text-muted-foreground">
@@ -184,14 +184,14 @@ export function BookingWizard({
               </p>
             )}
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 mt-2">
               {slots.map((slot) => (
                 <button
                   key={slot.start}
                   type="button"
                   onClick={() => setSelectedSlot(slot)}
-                  className={`rounded-md border px-3 py-1.5 text-sm hover:bg-accent ${
-                    selectedSlot?.start === slot.start ? "border-primary" : "border-input"
+                  className={`rounded-lg border px-4 py-2 text-sm font-medium transition-all hover:border-pink-300 hover:bg-pink-50 ${
+                    selectedSlot?.start === slot.start ? "border-pink-500 bg-pink-500 text-white shadow-md shadow-pink-200" : "border-pink-100 bg-white text-slate-700"
                   }`}
                 >
                   {new Date(slot.start).toLocaleTimeString("pt-BR", {
@@ -207,50 +207,51 @@ export function BookingWizard({
 
       {/* Passo 4: dados do cliente + confirmação */}
       {selectedSlot && selectedService && professionalId && (
-        <Card>
-          <CardHeader>
-            <CardTitle>4. Seus dados</CardTitle>
+        <Card className="border-pink-200 shadow-md ring-1 ring-pink-50">
+          <CardHeader className="bg-pink-50/50 border-b border-pink-100 rounded-t-xl pb-4">
+            <CardTitle className="text-xl text-pink-600">4. Confirme seus dados</CardTitle>
           </CardHeader>
-          <CardContent>
-            <form action={formAction} className="flex flex-col gap-4" noValidate>
+          <CardContent className="pt-6">
+            <form action={formAction} className="flex flex-col gap-5" noValidate>
               <input type="hidden" name="professional_id" value={professionalId} />
               <input type="hidden" name="service_id" value={selectedService.id} />
               <input type="hidden" name="start_datetime" value={selectedSlot.start} />
 
               <div className="flex flex-col gap-2">
-                <Label htmlFor="client_name">Nome</Label>
-                <Input id="client_name" name="client_name" required />
+                <Label htmlFor="client_name" className="text-slate-700 font-medium">Nome completo</Label>
+                <Input id="client_name" name="client_name" required className="border-pink-200 focus-visible:ring-pink-400" placeholder="Como devemos lhe chamar?" />
                 {bookingState.fieldErrors?.client_name && (
-                  <p className="text-sm text-destructive">
+                  <p className="text-sm text-destructive font-medium">
                     {bookingState.fieldErrors.client_name}
                   </p>
                 )}
               </div>
 
               <div className="flex flex-col gap-2">
-                <Label htmlFor="client_whatsapp">WhatsApp (DDD + número)</Label>
+                <Label htmlFor="client_whatsapp" className="text-slate-700 font-medium">WhatsApp (apenas números)</Label>
                 <Input
                   id="client_whatsapp"
                   name="client_whatsapp"
                   inputMode="numeric"
                   placeholder="11999999999"
                   required
+                  className="border-pink-200 focus-visible:ring-pink-400"
                 />
                 {bookingState.fieldErrors?.client_whatsapp && (
-                  <p className="text-sm text-destructive">
+                  <p className="text-sm text-destructive font-medium">
                     {bookingState.fieldErrors.client_whatsapp}
                   </p>
                 )}
               </div>
 
               {bookingState.error && (
-                <p role="alert" className="text-sm text-destructive">
+                <p role="alert" className="text-sm text-destructive bg-destructive/10 p-3 rounded-md font-medium border border-destructive/20 mt-2">
                   {bookingState.error}
                 </p>
               )}
 
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Confirmando..." : "Confirmar agendamento"}
+              <Button type="submit" disabled={isSubmitting} className="mt-2 bg-pink-600 hover:bg-pink-700 text-white shadow-lg shadow-pink-200 py-6 text-lg rounded-xl transition-all hover:scale-[1.02]">
+                {isSubmitting ? "Agendando..." : "Confirmar Agendamento"}
               </Button>
             </form>
           </CardContent>
