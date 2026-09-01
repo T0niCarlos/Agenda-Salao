@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState, useTransition } from "react";
+import { Scissors, Users, CalendarClock, CheckCircle2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -97,7 +98,10 @@ export function BookingWizard({
       {/* Passo 1: serviço */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl text-pink-600">1. Escolha o serviço</CardTitle>
+          <CardTitle className="text-xl text-pink-600 flex items-center gap-2">
+            <Scissors className="h-5 w-5" />
+            1. Escolha o serviço
+          </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           {services.length === 0 && (
@@ -127,7 +131,10 @@ export function BookingWizard({
       {serviceId && (
         <Card className="border-pink-100 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-xl text-pink-600">2. Escolha a profissional</CardTitle>
+            <CardTitle className="text-xl text-pink-600 flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              2. Escolha a profissional
+            </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             {professionals.length === 0 && (
@@ -158,7 +165,10 @@ export function BookingWizard({
       {professionalId && (
         <Card className="border-pink-100 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-xl text-pink-600">3. Escolha data e horário</CardTitle>
+            <CardTitle className="text-xl text-pink-600 flex items-center gap-2">
+              <CalendarClock className="h-5 w-5" />
+              3. Escolha data e horário
+            </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <div className="flex flex-col gap-2">
@@ -209,7 +219,10 @@ export function BookingWizard({
       {selectedSlot && selectedService && professionalId && (
         <Card className="border-pink-200 shadow-md ring-1 ring-pink-50">
           <CardHeader className="bg-pink-50/50 border-b border-pink-100 rounded-t-xl pb-4">
-            <CardTitle className="text-xl text-pink-600">4. Confirme seus dados</CardTitle>
+            <CardTitle className="text-xl text-pink-600 flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5" />
+              4. Confirme seus dados
+            </CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
             <form action={formAction} className="flex flex-col gap-5" noValidate>

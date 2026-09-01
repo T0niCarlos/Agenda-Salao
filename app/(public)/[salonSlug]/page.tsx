@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Sparkles } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { dateStrInTimeZone } from "@/lib/booking/availability";
@@ -32,9 +33,11 @@ export default async function SalonPublicPage({
   return (
     <div className="min-h-screen bg-pink-50 text-slate-800">
       {/* Header com tom pastel de rosa e sombra sutil */}
-      <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-10 border-b border-pink-100 p-6 text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-pink-600 font-serif">
+      <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-10 border-b border-pink-100 p-6 flex flex-col items-center">
+        <h1 className="text-3xl font-bold tracking-tight text-pink-600 font-serif flex items-center gap-2">
+          <Sparkles className="h-6 w-6 text-pink-400" />
           {salon.name}
+          <Sparkles className="h-6 w-6 text-pink-400" />
         </h1>
         <p className="text-sm text-pink-400 mt-1">Agendamento Online</p>
       </header>
