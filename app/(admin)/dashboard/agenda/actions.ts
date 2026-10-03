@@ -135,3 +135,24 @@ export async function updateAppointmentStatus(appointmentId: string, status: str
   await supabase.from("appointments").update({ status: parsed.data }).eq("id", appointmentId);
   revalidatePath("/dashboard/agenda");
 }
+// 1. APAGAR AGENDAMENTO DEFINITIVAMENTE DO BANCO
+export async function deleteAppointment(appointmentId: string) {
+  const { supabase } = await getCurrentAdmin();
+  await supabase.from("appointments").delete().eq("id", appointmentId);
+  revalidatePath("/dashboard/agenda");
+  revalidatePath("/dashboard/faturamento");
+}
+
+// 2. APAGAR SERVIÇO
+export async function deleteService(serviceId: string) {
+  const { supabase } = await getCurrentAdmin();
+  await supabase.from("services").delete().eq("id", serviceId);
+  revalidatePath("/dashboard/services");
+}
+
+// 3. APAGAR CLIENTE
+export async function deleteClient(clientId: string) {
+  const { supabase } = await getCurrentAdmin();
+  await supabase.from("clients").delete().eq("id", clientId);
+  revalidatePath("/dashboard/clients");
+}
