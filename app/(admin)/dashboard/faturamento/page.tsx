@@ -3,6 +3,15 @@ import { getCurrentAdmin } from "@/lib/auth/get-current-admin";
 
 export const dynamic = "force-dynamic";
 
+type AppointmentItem = {
+  id: string;
+  start_datetime: string;
+  price_cents: number;
+  status: string;
+  services: { name?: string } | null;
+  clients: { name?: string; whatsapp?: string } | null;
+};
+
 export default async function FaturamentoPage() {
   const { supabase, admin } = await getCurrentAdmin();
 
@@ -20,7 +29,7 @@ export default async function FaturamentoPage() {
     .eq("salon_id", admin.salonId)
     .order("start_datetime", { ascending: false });
 
-  const list = appointments || [];
+  const list = (appointments || []) as unknown as AppointmentItem[];
 
   // Data atual para cálculo do mês
   const now = new Date();
@@ -33,7 +42,7 @@ export default async function FaturamentoPage() {
     return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
   });
 
-  // Métricas do Mês usando os status exatos do seu sistema
+  // Métricas do Mês
   const faturamentoRealizadoCents = thisMonthApps
     .filter((a) => a.status === "completed")
     .reduce((acc, a) => acc + (a.price_cents || 0), 0);
@@ -43,9 +52,7 @@ export default async function FaturamentoPage() {
     .reduce((acc, a) => acc + (a.price_cents || 0), 0);
 
   const totalAtendimentosMes = thisMonthApps.filter((a) => a.status === "completed").length;
-
   const totalCanceladosMes = thisMonthApps.filter((a) => a.status === "cancelled").length;
-
   const totalFaltasMes = thisMonthApps.filter((a) => a.status === "no_show").length;
 
   const ticketMedioCents =
@@ -57,7 +64,7 @@ export default async function FaturamentoPage() {
   const serviceStats: Record<string, { count: number; totalCents: number }> = {};
   for (const a of thisMonthApps) {
     if (a.status !== "cancelled") {
-      const name = (a.services as any)?.name || "Outro";
+      const name = a.services?.name || "Outro";
       if (!serviceStats[name]) serviceStats[name] = { count: 0, totalCents: 0 };
       serviceStats[name].count += 1;
       serviceStats[name].totalCents += a.price_cents || 0;
@@ -187,8 +194,8 @@ export default async function FaturamentoPage() {
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {list.slice(0, 8).map((app) => {
-                  const client = app.clients as any;
-                  const service = app.services as any;
+                  const client = app.clients;
+                  const service = app.services;
                   const date = new Date(app.start_datetime);
                   const cleanPhone = client?.whatsapp ? client.whatsapp.replace(/\D/g, "") : "";
                   const message = encodeURIComponent(
