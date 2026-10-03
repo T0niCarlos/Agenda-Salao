@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { href: "/dashboard/services", label: "Serviços" },
   { href: "/dashboard/professionals", label: "Profissionais" },
   { href: "/dashboard/clients", label: "Clientes" },
+  { href: "/dashboard/faturamento", label: "Faturamento" },
 ] as const;
 
 export default async function DashboardLayout({
