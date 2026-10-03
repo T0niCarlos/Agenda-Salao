@@ -33,24 +33,25 @@ export default async function FaturamentoPage() {
     return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
   });
 
-  // Métricas do Mês
+  // Métricas do Mês usando os status exatos do seu sistema
   const faturamentoRealizadoCents = thisMonthApps
-    .filter((a) => a.status === "completed" || a.status === "finished")
+    .filter((a) => a.status === "completed")
     .reduce((acc, a) => acc + (a.price_cents || 0), 0);
 
   const faturamentoPrevistoCents = thisMonthApps
-    .filter((a) => a.status === "confirmed" || a.status === "pending")
+    .filter((a) => a.status === "confirmed")
     .reduce((acc, a) => acc + (a.price_cents || 0), 0);
 
-  const totalAtendimentosMes = thisMonthApps.filter(
-    (a) => a.status === "completed" || a.status === "finished"
-  ).length;
+  const totalAtendimentosMes = thisMonthApps.filter((a) => a.status === "completed").length;
 
   const totalCanceladosMes = thisMonthApps.filter((a) => a.status === "cancelled").length;
 
-  const ticketMedioCents = totalAtendimentosMes > 0 
-    ? Math.round(faturamentoRealizadoCents / totalAtendimentosMes) 
-    : 0;
+  const totalFaltasMes = thisMonthApps.filter((a) => a.status === "no_show").length;
+
+  const ticketMedioCents =
+    totalAtendimentosMes > 0
+      ? Math.round(faturamentoRealizadoCents / totalAtendimentosMes)
+      : 0;
 
   // Ranking de Serviços mais lucrativos
   const serviceStats: Record<string, { count: number; totalCents: number }> = {};
@@ -115,7 +116,7 @@ export default async function FaturamentoPage() {
           <p className="text-2xl font-bold text-slate-900 mt-3">
             {formatMoney(faturamentoPrevistoCents)}
           </p>
-          <p className="text-xs text-slate-500 mt-1">Horários agendados no mês</p>
+          <p className="text-xs text-slate-500 mt-1">Horários confirmados no mês</p>
         </div>
 
         {/* Card 3: Ticket Médio */}
@@ -129,15 +130,17 @@ export default async function FaturamentoPage() {
           <p className="text-xs text-slate-500 mt-1">Média por cliente atendida</p>
         </div>
 
-        {/* Card 4: Cancelamentos */}
+        {/* Card 4: Cancelamentos / Faltas */}
         <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm shadow-pink-50">
           <span className="text-xs font-semibold text-amber-600 uppercase tracking-wider bg-amber-50 px-2 py-1 rounded">
-            Cancelamentos
+            Cancelamentos / Faltas
           </span>
           <p className="text-2xl font-bold text-slate-900 mt-3">
-            {totalCanceladosMes}
+            {totalCanceladosMes + totalFaltasMes}
           </p>
-          <p className="text-xs text-slate-500 mt-1">Cancelados neste mês</p>
+          <p className="text-xs text-slate-500 mt-1">
+            {totalCanceladosMes} cancelados · {totalFaltasMes} faltas
+          </p>
         </div>
       </div>
 
