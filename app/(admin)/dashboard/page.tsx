@@ -1,10 +1,5 @@
-import Link from "next/link";
+import { revalidatePath } from "next/cache";
 import { getCurrentAdmin } from "@/lib/auth/get-current-admin";
-import {
-  updateAppointmentStatusAction,
-  deleteAppointmentAction,
-  createQuickServiceAction,
-} from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +13,52 @@ type AppointmentItem = {
 };
 
 export default async function DashboardMainPage() {
+  // Ações do Servidor Integradas (Sem precisar de arquivo actions.ts separado!)
+  async function updateStatus(
+    appointmentId: string,
+    status: "confirmed" | "completed" | "cancelled" | "no_show"
+  ) {
+    "use server";
+    const { supabase, admin } = await getCurrentAdmin();
+    await supabase
+      .from("appointments")
+      .update({ status })
+      .eq("id", appointmentId)
+      .eq("salon_id", admin.salonId);
+    revalidatePath("/dashboard");
+  }
+
+  async function deleteAppointment(appointmentId: string) {
+    "use server";
+    const { supabase, admin } = await getCurrentAdmin();
+    await supabase
+      .from("appointments")
+      .delete()
+      .eq("id", appointmentId)
+      .eq("salon_id", admin.salonId);
+    revalidatePath("/dashboard");
+  }
+
+  async function createQuickService(formData: FormData) {
+    "use server";
+    const { supabase, admin } = await getCurrentAdmin();
+    const name = formData.get("name") as string;
+    const duration = parseInt(formData.get("duration") as string, 10) || 45;
+    const priceRaw = (formData.get("price") as string) || "0";
+    const priceReais = parseFloat(priceRaw.replace(",", ".")) || 0;
+
+    if (name && priceReais > 0) {
+      await supabase.from("services").insert({
+        salon_id: admin.salonId,
+        name,
+        duration_minutes: duration,
+        price_cents: Math.round(priceReais * 100),
+        active: true,
+      });
+      revalidatePath("/dashboard");
+    }
+  }
+
   const { supabase, admin } = await getCurrentAdmin();
 
   // Buscar todos os agendamentos do salão
@@ -206,9 +247,7 @@ export default async function DashboardMainPage() {
                   {/* OS 4 BOTÕES DE SUPER PODER */}
                   <div className="flex flex-wrap items-center gap-2">
                     {/* 🟢 Botão Confirmar */}
-                    <form
-                      action={updateAppointmentStatusAction.bind(null, app.id, "confirmed")}
-                    >
+                    <form action={updateStatus.bind(null, app.id, "confirmed")}>
                       <button
                         type="submit"
                         title="Marcar como Confirmado"
@@ -219,9 +258,7 @@ export default async function DashboardMainPage() {
                     </form>
 
                     {/* ✅ Botão Finalizar (Faturado) */}
-                    <form
-                      action={updateAppointmentStatusAction.bind(null, app.id, "completed")}
-                    >
+                    <form action={updateStatus.bind(null, app.id, "completed")}>
                       <button
                         type="submit"
                         title="Marcar como Atendido e Faturado"
@@ -246,7 +283,7 @@ export default async function DashboardMainPage() {
                     )}
 
                     {/* 🗑️ Botão Excluir (Apaga na hora) */}
-                    <form action={deleteAppointmentAction.bind(null, app.id)}>
+                    <form action={deleteAppointment.bind(null, app.id)}>
                       <button
                         type="submit"
                         title="Excluir permanentemente do banco"
@@ -272,7 +309,7 @@ export default async function DashboardMainPage() {
           Cadastre novos procedimentos no catálogo da Aline Lyra imediatamente
         </p>
 
-        <form action={createQuickServiceAction} className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+        <form action={createQuickService} className="grid grid-cols-1 sm:grid-cols-4 gap-3">
           <div>
             <label className="text-xs font-medium text-slate-600">Nome do Serviço</label>
             <input
