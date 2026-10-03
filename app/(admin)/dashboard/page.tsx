@@ -1,16 +1,4 @@
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-
-export default function DashboardPage() {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Bem-vindo(a) de volta</CardTitle>
-        <CardDescription>import Link from "next/link";
+import Link from "next/link";
 import { getCurrentAdmin } from "@/lib/auth/get-current-admin";
 import {
   updateAppointmentStatusAction,
@@ -329,12 +317,5 @@ export default async function DashboardMainPage() {
         </form>
       </div>
     </div>
-  );
-}
-          Login funcionando. Agenda, serviços, profissionais, horários e
-          bloqueios entram nas próximas etapas.
-        </CardDescription>
-      </CardHeader>
-    </Card>
   );
 }
