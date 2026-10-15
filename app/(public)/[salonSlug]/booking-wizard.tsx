@@ -30,71 +30,71 @@ function formatPrice(cents: number) {
 function getServicePhoto(name: string) {
   const lower = name.toLowerCase();
 
-  // 1. Cílios - Fio a Fio (delicado e natural)
+  // 1. Cílios - Fio a Fio (extensão fio a fio com pinça - close-up profissional)
   if (lower.includes("fio a fio")) {
-    return "https://images.unsplash.com/photo-1583001931096-959e9a1a6223?auto=format&fit=crop&w=400&q=80";
+    return "https://images.pexels.com/photos/5128224/pexels-photo-5128224.jpeg?auto=compress&cs=tinysrgb&w=400";
   }
-  // 2. Cílios - Volume Russo (denso, volumoso e marcante)
+  // 2. Cílios - Volume Russo (aplicação de cílios com pinça - close-up salão)
   if (lower.includes("volume russo")) {
-    return "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=400&q=80";
+    return "https://images.pexels.com/photos/36930354/pexels-photo-36930354.jpeg?auto=compress&cs=tinysrgb&w=400";
   }
-  // 3. Volume Brasileiro / Volume Light / Outros cílios
+  // 3. Volume Brasileiro / Volume Light / Outros cílios (kit de cílios postiços)
   if (lower.includes("cílio") || lower.includes("cilio") || lower.includes("volume")) {
-    return "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=400&q=80";
+    return "https://images.pexels.com/photos/8558524/pexels-photo-8558524.jpeg?auto=compress&cs=tinysrgb&w=400";
   }
 
-  // 4. Sobrancelha (Design / Henna / Brow Lamination)
+  // 4. Sobrancelha (Design) — depilação com linha / design de sobrancelha
   if (lower.includes("sobrancelha") || lower.includes("design") || lower.includes("brow")) {
-    return "https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?auto=format&fit=crop&w=400&q=80";
+    return "https://images.pexels.com/photos/6135615/pexels-photo-6135615.jpeg?auto=compress&cs=tinysrgb&w=400";
   }
 
-  // 5. Escova Progressiva / Alinhamento (cabelo liso espelhado impecável)
+  // 5. Escova Progressiva / Alinhamento (escovação de cabelo liso no salão)
   if (lower.includes("progressiva") || lower.includes("alisamento") || lower.includes("botox")) {
-    return "https://images.unsplash.com/photo-1519699047748-de8e457a634e?auto=format&fit=crop&w=400&q=80";
+    return "https://images.pexels.com/photos/23349912/pexels-photo-23349912.jpeg?auto=compress&cs=tinysrgb&w=400";
   }
-  // 6. Escova Longo / Modelada (cabelo comprido ondulado com movimento)
+  // 6. Escova Longo / Modelada (cabelo comprido ondulado)
   if (lower.includes("longo") || lower.includes("modelad") || lower.includes("ondas")) {
-    return "https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?auto=format&fit=crop&w=400&q=80";
+    return "https://images.pexels.com/photos/8106142/pexels-photo-8106142.jpeg?auto=compress&cs=tinysrgb&w=400";
   }
-  // 7. Escova Curto / Tradicional (escovação profissional com secador)
+  // 7. Escova Curto / Tradicional (cabeleireira trabalhando em salão)
   if (lower.includes("escova")) {
-    return "https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=400&q=80";
+    return "https://images.pexels.com/photos/5368632/pexels-photo-5368632.jpeg?auto=compress&cs=tinysrgb&w=400";
   }
 
-  // 8. Hidratação Capilar / Nutrição / Tratamento no lavatório
+  // 8. Hidratação Capilar — lavagem e massagem no lavatório do salão
   if (lower.includes("hidrata") || lower.includes("nutri") || lower.includes("tratamento") || lower.includes("cauteriza")) {
-    return "https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=400&q=80";
+    return "https://images.pexels.com/photos/7755473/pexels-photo-7755473.jpeg?auto=compress&cs=tinysrgb&w=400";
   }
 
   // 9. Luzes / Mechas / Balayage
   if (lower.includes("luzes") || lower.includes("mecha") || lower.includes("balayage") || lower.includes("loiro")) {
-    return "https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?auto=format&fit=crop&w=400&q=80";
+    return "https://images.pexels.com/photos/7755460/pexels-photo-7755460.jpeg?auto=compress&cs=tinysrgb&w=400";
   }
   // 10. Coloração / Tintura
   if (lower.includes("colora") || lower.includes("tintura") || lower.includes("tinta") || lower.includes("tonaliza")) {
-    return "https://images.unsplash.com/photo-1600948836101-f9ffda59d250?auto=format&fit=crop&w=400&q=80";
+    return "https://images.pexels.com/photos/7755460/pexels-photo-7755460.jpeg?auto=compress&cs=tinysrgb&w=400";
   }
 
   // 11. Corte Masculino / Barba
   if (lower.includes("masculino") || lower.includes("barba") || lower.includes("homem")) {
-    return "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=400&q=80";
+    return "https://images.pexels.com/photos/8867400/pexels-photo-8867400.jpeg?auto=compress&cs=tinysrgb&w=400";
   }
-  // 12. Corte Feminino (tesoura em ação)
+  // 12. Corte Feminino
   if (lower.includes("corte")) {
-    return "https://images.unsplash.com/photo-1580618672591-eb180b1a973f?auto=format&fit=crop&w=400&q=80";
+    return "https://images.pexels.com/photos/5368632/pexels-photo-5368632.jpeg?auto=compress&cs=tinysrgb&w=400";
   }
 
-  // 13. Manicure / Esmaltação
+  // 13. Manicure / Esmaltação (unhas rosê com esmalte)
   if (lower.includes("manicure") || lower.includes("unha") || lower.includes("gel") || lower.includes("fibra")) {
-    return "https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&w=400&q=80";
+    return "https://images.pexels.com/photos/2281695/pexels-photo-2281695.jpeg?auto=compress&cs=tinysrgb&w=400";
   }
-  // 14. Pedicure / Pés
+  // 14. Pedicure / Pés (cuidado dos pés no salão)
   if (lower.includes("pedicure") || lower.includes("pé") || lower.includes("pes") || lower.includes("podologia")) {
-    return "https://images.unsplash.com/photo-1519014816548-bf5fe059798b?auto=format&fit=crop&w=400&q=80";
+    return "https://images.pexels.com/photos/5793888/pexels-photo-5793888.jpeg?auto=compress&cs=tinysrgb&w=400";
   }
 
-  // Foto padrão luxo
-  return "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=400&q=80";
+  // Foto padrão (salão de beleza)
+  return "https://images.pexels.com/photos/5368632/pexels-photo-5368632.jpeg?auto=compress&cs=tinysrgb&w=400";
 }
 
 export function BookingWizard({
