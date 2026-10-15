@@ -14,6 +14,12 @@ type Service = { id: string; name: string; duration_minutes: number; price_cents
 type Professional = { id: string; name: string };
 type Slot = { start: string; end: string };
 
+type WeekDayItem = {
+  dateStr: string;
+  dayLabel: string;
+  dayNumber: number;
+};
+
 const initialBookingState: CreateBookingState = {};
 
 function formatPrice(cents: number) {
@@ -47,7 +53,7 @@ export function BookingWizard({
   const [serviceId, setServiceId] = useState<string | null>(null);
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [professionalId, setProfessionalId] = useState<string | null>(null);
-  const [dateStr, setDateStr] = useState(todayStr);
+  const [dateStr, setDateStr] = useState<string>(todayStr);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
   const [slotsError, setSlotsError] = useState<string | null>(null);
@@ -57,17 +63,19 @@ export function BookingWizard({
   const boundAction = createBookingAction.bind(null, salonSlug);
   const [bookingState, formAction, isSubmitting] = useActionState(boundAction, initialBookingState);
 
-  // Próximos 7 dias no formato "Seg 26, Ter 27" idêntico à foto
-  const weekDays = useMemo(() => {
-    const list = [];
+  // Próximos 7 dias estritamente tipados
+  const weekDays = useMemo<WeekDayItem[]>(() => {
+    const list: WeekDayItem[] = [];
     const base = new Date(todayStr + "T12:00:00");
     const weekLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
     for (let i = 0; i < 7; i++) {
       const d = new Date(base);
       d.setDate(base.getDate() + i);
+      const dayLabel = weekLabels[d.getDay()] ?? "Seg";
+      const dateFormatted = d.toISOString().split("T")[0] ?? todayStr;
       list.push({
-        dateStr: d.toISOString().split("T")[0],
-        dayLabel: weekLabels[d.getDay()],
+        dateStr: dateFormatted,
+        dayLabel,
         dayNumber: d.getDate(),
       });
     }
@@ -97,10 +105,11 @@ export function BookingWizard({
     startTransition(async () => {
       const list = await getProfessionalsForService(service.id);
       setProfessionals(list);
-      // Como é a Aline Lyra, auto-seleciona ela para agilizar o fluxo!
-      if (list.length === 1) {
-        setProfessionalId(list[0].id);
-        loadSlots(list[0].id, dateStr);
+      // Validação segura para evitar erro TS2532
+      const firstProf = list[0];
+      if (firstProf && list.length === 1) {
+        setProfessionalId(firstProf.id);
+        loadSlots(firstProf.id, dateStr);
       }
     });
   }
@@ -258,6 +267,7 @@ export function BookingWizard({
                   key={w.dateStr}
                   type="button"
                   onClick={() => {
+                    if (!w.dateStr) return;
                     setDateStr(w.dateStr);
                     if (professionalId) {
                       loadSlots(professionalId, w.dateStr);
