@@ -26,19 +26,75 @@ function formatPrice(cents: number) {
   return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-// Fotos automáticas em alta resolução para cada categoria de serviço
+// 📸 FOTOS ESPECÍFICAS PARA CADA SERVIÇO INDIVIDUAL
 function getServicePhoto(name: string) {
   const lower = name.toLowerCase();
-  if (lower.includes("cílio") || lower.includes("cilio") || lower.includes("volume") || lower.includes("lash")) {
-    return "https://images.unsplash.com/photo-1583001931096-959e9a1a6223?auto=format&fit=crop&w=250&q=80";
+
+  // 1. Cílios - Fio a Fio (delicado e natural)
+  if (lower.includes("fio a fio")) {
+    return "https://images.unsplash.com/photo-1583001931096-959e9a1a6223?auto=format&fit=crop&w=400&q=80";
   }
+  // 2. Cílios - Volume Russo (denso, volumoso e marcante)
+  if (lower.includes("volume russo")) {
+    return "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=400&q=80";
+  }
+  // 3. Volume Brasileiro / Volume Light / Outros cílios
+  if (lower.includes("cílio") || lower.includes("cilio") || lower.includes("volume")) {
+    return "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=400&q=80";
+  }
+
+  // 4. Sobrancelha (Design / Henna / Brow Lamination)
   if (lower.includes("sobrancelha") || lower.includes("design") || lower.includes("brow")) {
-    return "https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?auto=format&fit=crop&w=250&q=80";
+    return "https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?auto=format&fit=crop&w=400&q=80";
   }
-  if (lower.includes("unha") || lower.includes("manicure") || lower.includes("pedicure") || lower.includes("nail")) {
-    return "https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&w=250&q=80";
+
+  // 5. Escova Progressiva / Alinhamento (cabelo liso espelhado impecável)
+  if (lower.includes("progressiva") || lower.includes("alisamento") || lower.includes("botox")) {
+    return "https://images.unsplash.com/photo-1519699047748-de8e457a634e?auto=format&fit=crop&w=400&q=80";
   }
-  return "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=250&q=80";
+  // 6. Escova Longo / Modelada (cabelo comprido ondulado com movimento)
+  if (lower.includes("longo") || lower.includes("modelad") || lower.includes("ondas")) {
+    return "https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?auto=format&fit=crop&w=400&q=80";
+  }
+  // 7. Escova Curto / Tradicional (escovação profissional com secador)
+  if (lower.includes("escova")) {
+    return "https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=400&q=80";
+  }
+
+  // 8. Hidratação Capilar / Nutrição / Tratamento no lavatório
+  if (lower.includes("hidrata") || lower.includes("nutri") || lower.includes("tratamento") || lower.includes("cauteriza")) {
+    return "https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=400&q=80";
+  }
+
+  // 9. Luzes / Mechas / Balayage
+  if (lower.includes("luzes") || lower.includes("mecha") || lower.includes("balayage") || lower.includes("loiro")) {
+    return "https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?auto=format&fit=crop&w=400&q=80";
+  }
+  // 10. Coloração / Tintura
+  if (lower.includes("colora") || lower.includes("tintura") || lower.includes("tinta") || lower.includes("tonaliza")) {
+    return "https://images.unsplash.com/photo-1600948836101-f9ffda59d250?auto=format&fit=crop&w=400&q=80";
+  }
+
+  // 11. Corte Masculino / Barba
+  if (lower.includes("masculino") || lower.includes("barba") || lower.includes("homem")) {
+    return "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=400&q=80";
+  }
+  // 12. Corte Feminino (tesoura em ação)
+  if (lower.includes("corte")) {
+    return "https://images.unsplash.com/photo-1580618672591-eb180b1a973f?auto=format&fit=crop&w=400&q=80";
+  }
+
+  // 13. Manicure / Esmaltação
+  if (lower.includes("manicure") || lower.includes("unha") || lower.includes("gel") || lower.includes("fibra")) {
+    return "https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&w=400&q=80";
+  }
+  // 14. Pedicure / Pés
+  if (lower.includes("pedicure") || lower.includes("pé") || lower.includes("pes") || lower.includes("podologia")) {
+    return "https://images.unsplash.com/photo-1519014816548-bf5fe059798b?auto=format&fit=crop&w=400&q=80";
+  }
+
+  // Foto padrão luxo
+  return "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=400&q=80";
 }
 
 export function BookingWizard({
@@ -105,7 +161,6 @@ export function BookingWizard({
     startTransition(async () => {
       const list = await getProfessionalsForService(service.id);
       setProfessionals(list);
-      // Validação segura para evitar erro TS2532
       const firstProf = list[0];
       if (firstProf && list.length === 1) {
         setProfessionalId(firstProf.id);
@@ -199,7 +254,7 @@ export function BookingWizard({
 
   return (
     <div className="flex flex-col gap-6">
-      {/* ✂️ 1. ESCOLHA O SERVIÇO (DESIGN DA IMAGEM) */}
+      {/* ✂️ 1. ESCOLHA O SERVIÇO COM FOTOS INDIVIDUAIS */}
       <div className="bg-white rounded-3xl p-5 border border-[#efe6ee] shadow-sm">
         <h3 className="text-base font-bold text-[#2e1f2c] mb-4">Escolha o serviço</h3>
 
@@ -223,7 +278,7 @@ export function BookingWizard({
                   <img
                     src={photoUrl}
                     alt={service.name}
-                    className="w-[52px] h-[52px] rounded-xl object-cover shrink-0 shadow-sm"
+                    className="w-[52px] h-[52px] rounded-xl object-cover shrink-0 shadow-sm border border-[#f5edf4]"
                   />
                   <div>
                     <h4 className="font-semibold text-sm text-[#2d1e2b] leading-tight">
@@ -252,7 +307,7 @@ export function BookingWizard({
         </div>
       </div>
 
-      {/* 📅 2. SELECIONE O MELHOR HORÁRIO (PÍLULAS DA IMAGEM) */}
+      {/* 📅 2. SELECIONE O MELHOR HORÁRIO */}
       {serviceId && (
         <div className="bg-white rounded-3xl p-5 border border-[#efe6ee] shadow-sm flex flex-col gap-4">
           <h3 className="text-base font-bold text-[#2e1f2c]">
@@ -331,7 +386,7 @@ export function BookingWizard({
         </div>
       )}
 
-      {/* 👤 3. DADOS DA CLIENTE & BOTÃO OFICIAL DA IMAGEM */}
+      {/* 👤 3. DADOS DA CLIENTE & BOTÃO AGENDAR */}
       {selectedSlot && selectedService && professionalId && (
         <div className="bg-white rounded-3xl p-5 border border-[#efe6ee] shadow-sm">
           <h3 className="text-base font-bold text-[#2e1f2c] mb-4">
@@ -388,7 +443,6 @@ export function BookingWizard({
               </p>
             )}
 
-            {/* BOTÃO IDÊNTICO À IMAGEM: 📅 Agendar horário → */}
             <button
               type="submit"
               disabled={isSubmitting}
