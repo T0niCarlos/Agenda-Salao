@@ -1,12 +1,7 @@
 "use client";
 
-import { useActionState, useState, useTransition } from "react";
-import { Scissors, Users, CalendarClock, CheckCircle2 } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useActionState, useState, useTransition, useMemo } from "react";
+import { ChevronRight, Calendar as CalendarIcon, Check } from "lucide-react";
 
 import {
   createBookingAction,
@@ -25,6 +20,21 @@ function formatPrice(cents: number) {
   return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+// Fotos automáticas em alta resolução para cada categoria de serviço
+function getServicePhoto(name: string) {
+  const lower = name.toLowerCase();
+  if (lower.includes("cílio") || lower.includes("cilio") || lower.includes("volume") || lower.includes("lash")) {
+    return "https://images.unsplash.com/photo-1583001931096-959e9a1a6223?auto=format&fit=crop&w=250&q=80";
+  }
+  if (lower.includes("sobrancelha") || lower.includes("design") || lower.includes("brow")) {
+    return "https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?auto=format&fit=crop&w=250&q=80";
+  }
+  if (lower.includes("unha") || lower.includes("manicure") || lower.includes("pedicure") || lower.includes("nail")) {
+    return "https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&w=250&q=80";
+  }
+  return "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=250&q=80";
+}
+
 export function BookingWizard({
   salonSlug,
   services,
@@ -41,31 +51,35 @@ export function BookingWizard({
   const [slots, setSlots] = useState<Slot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
   const [slotsError, setSlotsError] = useState<string | null>(null);
+  const [clientName, setClientName] = useState<string>("");
   const [isPending, startTransition] = useTransition();
 
-  const boundCreateBooking = createBookingAction.bind(null, salonSlug);
-  const [bookingState, formAction, isSubmitting] = useActionState(
-    boundCreateBooking,
-    initialBookingState
-  );
+  const boundAction = createBookingAction.bind(null, salonSlug);
+  const [bookingState, formAction, isSubmitting] = useActionState(boundAction, initialBookingState);
 
-  function handleSelectService(service: Service) {
-    setServiceId(service.id);
-    setProfessionalId(null);
-    setSlots([]);
-    setSelectedSlot(null);
-    startTransition(async () => {
-      const list = await getProfessionalsForService(service.id);
-      setProfessionals(list);
-    });
-  }
+  // Próximos 7 dias no formato "Seg 26, Ter 27" idêntico à foto
+  const weekDays = useMemo(() => {
+    const list = [];
+    const base = new Date(todayStr + "T12:00:00");
+    const weekLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(base);
+      d.setDate(base.getDate() + i);
+      list.push({
+        dateStr: d.toISOString().split("T")[0],
+        dayLabel: weekLabels[d.getDay()],
+        dayNumber: d.getDate(),
+      });
+    }
+    return list;
+  }, [todayStr]);
 
-  function loadSlots(nextProfessionalId: string, nextDateStr: string) {
+  function loadSlots(profId: string, date: string) {
     if (!serviceId) return;
     setSelectedSlot(null);
     setSlotsError(null);
     startTransition(async () => {
-      const result = await getSlotsAction(salonSlug, nextProfessionalId, serviceId, nextDateStr);
+      const result = await getSlotsAction(salonSlug, profId, serviceId, date);
       if (result.ok) {
         setSlots(result.slots);
       } else {
@@ -75,200 +89,306 @@ export function BookingWizard({
     });
   }
 
-  const selectedService = services.find((s) => s.id === serviceId) ?? null;
+  function handleSelectService(service: Service) {
+    setServiceId(service.id);
+    setProfessionalId(null);
+    setSlots([]);
+    setSelectedSlot(null);
+    startTransition(async () => {
+      const list = await getProfessionalsForService(service.id);
+      setProfessionals(list);
+      // Como é a Aline Lyra, auto-seleciona ela para agilizar o fluxo!
+      if (list.length === 1) {
+        setProfessionalId(list[0].id);
+        loadSlots(list[0].id, dateStr);
+      }
+    });
+  }
 
-  if (bookingState.success) {
+  const selectedService = services.find((s) => s.id === serviceId) ?? null;
+  const ALINE_WHATSAPP = "55219777262946";
+
+  // 🎉 TELA DE SUCESSO COM O BOTÃO DIRETO DO WHATSAPP
+  if (bookingState.success && selectedService && selectedSlot) {
+    const slotDate = new Date(selectedSlot.start);
+    const dateFormatted = slotDate.toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+    const timeFormatted = slotDate.toLocaleTimeString("pt-BR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    const whatsappMessage = encodeURIComponent(
+      `Olá, Aline! ✨ Acabei de fazer um agendamento pelo site:\n\n` +
+      `✂️ *Serviço:* ${selectedService.name}\n` +
+      `📅 *Data:* ${dateFormatted}\n` +
+      `⏰ *Horário:* ${timeFormatted}\n` +
+      `💰 *Valor:* ${formatPrice(selectedService.price_cents)}\n` +
+      (clientName ? `👤 *Cliente:* ${clientName}\n\n` : `\n`) +
+      `Pode me confirmar? Obrigada!`
+    );
+
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Agendamento confirmado!</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Seu horário foi reservado com sucesso. Chegue com alguns minutos de
-            antecedência.
+      <div className="bg-white rounded-3xl border border-[#efe6ee] shadow-xl shadow-[#5c3e59]/10 p-6 sm:p-8 text-center flex flex-col items-center gap-6">
+        <div className="w-16 h-16 bg-[#eef8f2] text-emerald-600 rounded-full flex items-center justify-center text-3xl shadow-sm">
+          <Check className="w-8 h-8 stroke-[3]" />
+        </div>
+
+        <div>
+          <h2 className="text-2xl font-serif font-bold text-[#2d1e2b]">
+            Agendamento Realizado!
+          </h2>
+          <p className="text-xs text-[#7d677a] mt-1.5">
+            Seu horário com <strong>Aline Lyra</strong> foi reservado com sucesso.
           </p>
-        </CardContent>
-      </Card>
+        </div>
+
+        <div className="w-full bg-[#faf7f8] rounded-2xl p-4 border border-[#eee2ed] text-left text-sm flex flex-col gap-2.5">
+          <div className="flex justify-between items-center border-b border-[#ebdbe9] pb-2">
+            <span className="text-[#846f81]">Serviço:</span>
+            <span className="font-semibold text-[#2f202e]">{selectedService.name}</span>
+          </div>
+          <div className="flex justify-between items-center border-b border-[#ebdbe9] pb-2">
+            <span className="text-[#846f81]">Data e Horário:</span>
+            <span className="font-semibold text-[#2f202e]">
+              {dateFormatted} às {timeFormatted}
+            </span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-[#846f81]">Valor:</span>
+            <span className="font-bold text-[#5c3e59] text-base">{formatPrice(selectedService.price_cents)}</span>
+          </div>
+        </div>
+
+        <div className="w-full flex flex-col gap-2">
+          <a
+            href={`https://wa.me/${ALINE_WHATSAPP}?text=${whatsappMessage}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full py-4 px-6 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-emerald-200 transition-all hover:scale-[1.02] flex items-center justify-center gap-2 text-center"
+          >
+            💬 Enviar Confirmação no WhatsApp da Aline
+          </a>
+          <p className="text-[11px] text-[#9b8898]">
+            Toque no botão acima para abrir a conversa e confirmar seu horário diretamente com a Aline!
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="text-xs text-[#5c3e59] hover:underline font-semibold mt-2"
+        >
+          Fazer outro agendamento
+        </button>
+      </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Passo 1: serviço */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl text-pink-600 flex items-center gap-2">
-            <Scissors className="h-5 w-5" />
-            1. Escolha o serviço
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-3">
-          {services.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              Nenhum serviço disponível no momento.
-            </p>
-          )}
-          {services.map((service) => (
-            <button
-              key={service.id}
-              type="button"
-              onClick={() => handleSelectService(service)}
-              className={`flex items-center justify-between rounded-xl border p-4 text-left text-sm transition-all hover:border-pink-300 hover:bg-pink-50/50 ${
-                serviceId === service.id ? "border-pink-500 bg-pink-50 ring-1 ring-pink-500" : "border-input bg-white"
-              }`}
-            >
-              <span className="font-medium text-slate-700">{service.name}</span>
-              <span className="text-pink-600 font-semibold bg-white px-2 py-1 rounded-md shadow-sm border border-pink-100">
-                {service.duration_minutes}min · {formatPrice(service.price_cents)}
-              </span>
-            </button>
-          ))}
-        </CardContent>
-      </Card>
+    <div className="flex flex-col gap-6">
+      {/* ✂️ 1. ESCOLHA O SERVIÇO (DESIGN DA IMAGEM) */}
+      <div className="bg-white rounded-3xl p-5 border border-[#efe6ee] shadow-sm">
+        <h3 className="text-base font-bold text-[#2e1f2c] mb-4">Escolha o serviço</h3>
 
-      {/* Passo 2: profissional */}
-      {serviceId && (
-        <Card className="border-pink-100 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-xl text-pink-600 flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              2. Escolha a profissional
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            {professionals.length === 0 && (
-              <p className="text-sm text-muted-foreground">
-                Nenhuma profissional disponível para este serviço.
-              </p>
-            )}
-            {professionals.map((professional) => (
+        <div className="flex flex-col gap-3">
+          {services.map((service) => {
+            const isSelected = serviceId === service.id;
+            const photoUrl = getServicePhoto(service.name);
+
+            return (
               <button
-                key={professional.id}
+                key={service.id}
                 type="button"
-                onClick={() => {
-                  setProfessionalId(professional.id);
-                  loadSlots(professional.id, dateStr);
-                }}
-                className={`rounded-xl border p-4 text-left text-sm font-medium transition-all hover:border-pink-300 hover:bg-pink-50/50 ${
-                  professionalId === professional.id ? "border-pink-500 bg-pink-50 ring-1 ring-pink-500 text-pink-700" : "border-input text-slate-700 bg-white"
+                onClick={() => handleSelectService(service)}
+                className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all text-left ${
+                  isSelected
+                    ? "border-[#5c3e59] bg-[#fbf6fa] shadow-sm ring-1 ring-[#5c3e59]"
+                    : "border-[#f2ebf1] hover:border-[#dbcbd9] bg-white"
                 }`}
               >
-                {professional.name}
+                <div className="flex items-center gap-3.5">
+                  <img
+                    src={photoUrl}
+                    alt={service.name}
+                    className="w-[52px] h-[52px] rounded-xl object-cover shrink-0 shadow-sm"
+                  />
+                  <div>
+                    <h4 className="font-semibold text-sm text-[#2d1e2b] leading-tight">
+                      {service.name}
+                    </h4>
+                    <p className="text-xs text-[#8a7587] mt-1 font-light">
+                      {Math.floor(service.duration_minutes / 60) > 0
+                        ? `${Math.floor(service.duration_minutes / 60)}h `
+                        : ""}
+                      {service.duration_minutes % 60 > 0
+                        ? `${service.duration_minutes % 60}min`
+                        : "00min"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-sm text-[#2d1e2b]">
+                    {formatPrice(service.price_cents)}
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-[#9c8799]" />
+                </div>
               </button>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+            );
+          })}
+        </div>
+      </div>
 
-      {/* Passo 3: data + horário */}
-      {professionalId && (
-        <Card className="border-pink-100 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-xl text-pink-600 flex items-center gap-2">
-              <CalendarClock className="h-5 w-5" />
-              3. Escolha data e horário
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="date" className="text-slate-600 font-medium">Data</Label>
-              <Input
-                id="date"
-                type="date"
-                min={todayStr}
-                value={dateStr}
-                onChange={(e) => {
-                  setDateStr(e.target.value);
-                  loadSlots(professionalId, e.target.value);
-                }}
-                className="w-48 focus-visible:ring-pink-400 border-pink-200"
-              />
-            </div>
+      {/* 📅 2. SELECIONE O MELHOR HORÁRIO (PÍLULAS DA IMAGEM) */}
+      {serviceId && (
+        <div className="bg-white rounded-3xl p-5 border border-[#efe6ee] shadow-sm flex flex-col gap-4">
+          <h3 className="text-base font-bold text-[#2e1f2c]">
+            Selecione o melhor horário
+          </h3>
 
-            {isPending && <p className="text-sm text-pink-500 animate-pulse">Carregando horários disponíveis...</p>}
-            {slotsError && <p className="text-sm text-destructive">{slotsError}</p>}
-            {!isPending && !slotsError && slots.length === 0 && (
-              <p className="text-sm text-muted-foreground">
-                Nenhum horário disponível nesta data.
+          <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+            {weekDays.map((w) => {
+              const isSelectedDate = dateStr === w.dateStr;
+              return (
+                <button
+                  key={w.dateStr}
+                  type="button"
+                  onClick={() => {
+                    setDateStr(w.dateStr);
+                    if (professionalId) {
+                      loadSlots(professionalId, w.dateStr);
+                    }
+                  }}
+                  className={`flex flex-col items-center justify-center min-w-[56px] py-2.5 rounded-2xl transition-all text-xs font-medium border ${
+                    isSelectedDate
+                      ? "bg-[#5c3e59] text-white border-[#5c3e59] shadow-md shadow-[#5c3e59]/25 scale-105"
+                      : "bg-white text-[#4f3a4c] border-[#eee3ed] hover:border-[#cfbccd]"
+                  }`}
+                >
+                  <span className="text-[11px] opacity-80">{w.dayLabel}</span>
+                  <span className="text-base font-bold mt-0.5">{w.dayNumber}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div>
+            {isPending && (
+              <p className="text-xs text-[#8c7489] animate-pulse py-3 text-center">
+                Buscando horários disponíveis...
               </p>
             )}
 
-            <div className="flex flex-wrap gap-2 mt-2">
-              {slots.map((slot) => (
-                <button
-                  key={slot.start}
-                  type="button"
-                  onClick={() => setSelectedSlot(slot)}
-                  className={`rounded-lg border px-4 py-2 text-sm font-medium transition-all hover:border-pink-300 hover:bg-pink-50 ${
-                    selectedSlot?.start === slot.start ? "border-pink-500 bg-pink-500 text-white shadow-md shadow-pink-200" : "border-pink-100 bg-white text-slate-700"
-                  }`}
-                >
-                  {new Date(slot.start).toLocaleTimeString("pt-BR", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </button>
-              ))}
+            {slotsError && (
+              <p className="text-xs text-rose-600 py-2 text-center">{slotsError}</p>
+            )}
+
+            {!isPending && !slotsError && slots.length === 0 && (
+              <p className="text-xs text-[#8f798c] py-4 text-center">
+                Nenhum horário livre para esta data. Selecione outro dia acima.
+              </p>
+            )}
+
+            <div className="grid grid-cols-4 gap-2.5 mt-2">
+              {slots.map((slot) => {
+                const isSelectedSlot = selectedSlot?.start === slot.start;
+                const timeLabel = new Date(slot.start).toLocaleTimeString("pt-BR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+
+                return (
+                  <button
+                    key={slot.start}
+                    type="button"
+                    onClick={() => setSelectedSlot(slot)}
+                    className={`py-2 px-1 rounded-xl text-xs font-semibold border transition-all text-center ${
+                      isSelectedSlot
+                        ? "bg-[#5c3e59] text-white border-[#5c3e59] shadow-sm"
+                        : "bg-white text-[#423140] border-[#ecdfe9] hover:border-[#9f799d]"
+                    }`}
+                  >
+                    {timeLabel}
+                  </button>
+                );
+              })}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
-      {/* Passo 4: dados do cliente + confirmação */}
+      {/* 👤 3. DADOS DA CLIENTE & BOTÃO OFICIAL DA IMAGEM */}
       {selectedSlot && selectedService && professionalId && (
-        <Card className="border-pink-200 shadow-md ring-1 ring-pink-50">
-          <CardHeader className="bg-pink-50/50 border-b border-pink-100 rounded-t-xl pb-4">
-            <CardTitle className="text-xl text-pink-600 flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5" />
-              4. Confirme seus dados
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <form action={formAction} className="flex flex-col gap-5" noValidate>
-              <input type="hidden" name="professional_id" value={professionalId} />
-              <input type="hidden" name="service_id" value={selectedService.id} />
-              <input type="hidden" name="start_datetime" value={selectedSlot.start} />
+        <div className="bg-white rounded-3xl p-5 border border-[#efe6ee] shadow-sm">
+          <h3 className="text-base font-bold text-[#2e1f2c] mb-4">
+            Seus dados para confirmar
+          </h3>
 
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="client_name" className="text-slate-700 font-medium">Nome completo</Label>
-                <Input id="client_name" name="client_name" required className="border-pink-200 focus-visible:ring-pink-400" placeholder="Como devemos lhe chamar?" />
-                {bookingState.fieldErrors?.client_name && (
-                  <p className="text-sm text-destructive font-medium">
-                    {bookingState.fieldErrors.client_name}
-                  </p>
-                )}
-              </div>
+          <form action={formAction} className="flex flex-col gap-4">
+            <input type="hidden" name="professional_id" value={professionalId} />
+            <input type="hidden" name="service_id" value={selectedService.id} />
+            <input type="hidden" name="start_datetime" value={selectedSlot.start} />
 
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="client_whatsapp" className="text-slate-700 font-medium">WhatsApp (apenas números)</Label>
-                <Input
-                  id="client_whatsapp"
-                  name="client_whatsapp"
-                  inputMode="numeric"
-                  placeholder="11999999999"
-                  required
-                  className="border-pink-200 focus-visible:ring-pink-400"
-                />
-                {bookingState.fieldErrors?.client_whatsapp && (
-                  <p className="text-sm text-destructive font-medium">
-                    {bookingState.fieldErrors.client_whatsapp}
-                  </p>
-                )}
-              </div>
-
-              {bookingState.error && (
-                <p role="alert" className="text-sm text-destructive bg-destructive/10 p-3 rounded-md font-medium border border-destructive/20 mt-2">
-                  {bookingState.error}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-[#543f52]">
+                Nome completo
+              </label>
+              <input
+                type="text"
+                name="client_name"
+                required
+                value={clientName}
+                onChange={(e) => setClientName(e.target.value)}
+                placeholder="Como devemos lhe chamar?"
+                className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-[#ebdbe9] focus:outline-none focus:ring-2 focus:ring-[#5c3e59] bg-[#faf7f8]"
+              />
+              {bookingState.fieldErrors?.client_name && (
+                <p className="text-xs text-rose-600 font-medium">
+                  {bookingState.fieldErrors.client_name}
                 </p>
               )}
+            </div>
 
-              <Button type="submit" disabled={isSubmitting} className="mt-2 bg-pink-600 hover:bg-pink-700 text-white shadow-lg shadow-pink-200 py-6 text-lg rounded-xl transition-all hover:scale-[1.02]">
-                {isSubmitting ? "Agendando..." : "Confirmar Agendamento"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-[#543f52]">
+                WhatsApp (apenas números com DDD)
+              </label>
+              <input
+                type="text"
+                name="client_whatsapp"
+                inputMode="numeric"
+                required
+                placeholder="21999999999"
+                className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-[#ebdbe9] focus:outline-none focus:ring-2 focus:ring-[#5c3e59] bg-[#faf7f8]"
+              />
+              {bookingState.fieldErrors?.client_whatsapp && (
+                <p className="text-xs text-rose-600 font-medium">
+                  {bookingState.fieldErrors.client_whatsapp}
+                </p>
+              )}
+            </div>
+
+            {bookingState.error && (
+              <p className="text-xs text-rose-600 bg-rose-50 p-2.5 rounded-xl border border-rose-100">
+                {bookingState.error}
+              </p>
+            )}
+
+            {/* BOTÃO IDÊNTICO À IMAGEM: 📅 Agendar horário → */}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full mt-2 py-4 px-6 bg-[#5c3e59] hover:bg-[#4b3148] text-white rounded-2xl font-bold text-sm shadow-lg shadow-[#5c3e59]/30 transition-all hover:scale-[1.01] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+            >
+              <CalendarIcon className="w-4 h-4" />
+              <span>{isSubmitting ? "Agendando..." : "Agendar horário →"}</span>
+            </button>
+          </form>
+        </div>
       )}
     </div>
   );
