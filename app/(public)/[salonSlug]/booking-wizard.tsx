@@ -170,7 +170,7 @@ export function BookingWizard({
   }
 
   const selectedService = services.find((s) => s.id === serviceId) ?? null;
-  const ALINE_WHATSAPP = "55219777262946";
+  const ALINE_WHATSAPP = "5521977262946";
 
   // 🎉 TELA DE SUCESSO COM O BOTÃO DIRETO DO WHATSAPP
   if (bookingState.success && selectedService && selectedSlot) {
